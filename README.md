@@ -3,7 +3,8 @@
 
 This web application allows you to predict whether a hotel booking will be **Confirmed** or **Canceled** based on a set of input features. The app also integrates Power BI reports for visual analytics, providing a comprehensive solution for analyzing hotel booking data.
 
-## Online URL: [Hotel Booking Status Predictor](https://hotelbookingstatuspredictor.streamlit.app/)
+## Online URL: 
+[Hotel Booking Status Predictor](https://hotelbookingstatuspredictor.streamlit.app/)
 
 ## Features:
 - **Model Prediction**: Predicts booking status (Confirmed or Canceled) using pre-trained models (Random Forest, Extra Trees) or a custom model.
