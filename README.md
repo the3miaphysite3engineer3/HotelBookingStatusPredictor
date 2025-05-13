@@ -83,7 +83,23 @@ Feel free to fork the repository, create a branch, and submit pull requests for 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-```
+## Contact Information:
 
-You can copy this Markdown directly to your GitHub repository's README file. It will render well on GitHub and provide all the necessary instructions for installation and usage.
-```
+* **Mohammed Ahmed Mohammed Abdul-Aziz**
+  Email: [mohammed@example.com](mailto:mohammed@example.com)
+
+* **Nada Nasser Ragab**
+  Email: [nadanasssrnasser309@gmail.com](mailto:nadanasssrnasser309@gmail.com)
+
+* **Naira Mohamed Abdelbasset**
+  Email: [eng.naira2311@gmail.com](mailto:eng.naira2311@gmail.com)
+
+* **Abdallah Ahmed Mostafa**
+  Email: [bedo.ahmedusa2001@gmail.com](mailto:bedo.ahmedusa2001@gmail.com)
+
+* **George Joseph Basilious Tawadrous**
+  Email: [georgejoseph5000@gmail.com](mailto:georgejoseph5000@gmail.com)
+
+* **Saif El-Din Mohammad Moheb**
+  Email: [seifmoh495@gmail.com](mailto:seifmoh495@gmail.com)
+
