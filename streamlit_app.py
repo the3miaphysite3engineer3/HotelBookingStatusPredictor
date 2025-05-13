@@ -61,7 +61,7 @@ type_of_meal_plan = st.selectbox("Meal Plan", ["Meal Plan 1", "Meal Plan 2", "No
 required_car_parking_space = st.selectbox("Car Parking Required", [0, 1])
 room_type_reserved = st.selectbox("Room Type Reserved", ["Room_Type 1", "Room_Type 2", "Room_Type 3", "Room_Type 4"])
 lead_time = st.number_input("Lead Time (days)", value=0, step=1)
-arrival_year = st.selectbox("Arrival Year", [2017, 2018])
+arrival_year = st.selectbox("Arrival Year", list(range(1900, 2101)))
 arrival_month = st.selectbox("Arrival Month", list(range(1, 13)))
 arrival_date = st.number_input("Arrival Date", value=15, step=1)
 market_segment_type = st.selectbox("Market Segment", ["Offline", "Online", "Corporate", "Complementary", "Aviation"])
