@@ -2,13 +2,32 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
+import requests
+from io import BytesIO
 
-# Load model
+# Load model from URL
 @st.cache_resource
-def load_model():
-    return joblib.load("random_forest_model.pkl")
+def load_model(url):
+    try:
+        with st.spinner("Loading model (this may take a moment)..."):
+            response = requests.get(url, timeout=60)
+            response.raise_for_status()  # Check for HTTP errors
+            model = joblib.load(BytesIO(response.content))
+        return model
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
+        return None
 
-model = load_model()
+# Text input for model URL with default value
+default_model_url = "https://drive.usercontent.google.com/u/0/uc?id=1N36N2qn3egwmW6iwFOO4_5c_gSrrsODB&export=download"
+model_url = st.text_input("Model URL (.pkl file)", value=default_model_url, help="Enter the URL to the .pkl file. Default is a pre-set Google Drive link.")
+
+# Load the model
+model = load_model(model_url)
+
+# Check if model loaded successfully
+if model is None:
+    st.stop()  # Stop execution if model failed to load
 
 st.title("Hotel Booking Status Predictor")
 
