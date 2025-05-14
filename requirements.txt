@@ -1,5 +1,10 @@
 streamlit
-scikit-learn
-joblib
-numpy
 pandas
+numpy
+joblib
+requests
+mlflow
+prometheus-client
+scipy
+huggingface_hub
+google-generativeai
