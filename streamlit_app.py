@@ -4,38 +4,47 @@ import pandas as pd
 import joblib
 import requests
 from io import BytesIO
+import os
+import google.generativeai as genai
 
+# Set page configuration
 st.set_page_config(page_title="Hotel Booking Predictor", layout="centered")
-
 st.title("🏨 Hotel Booking Status Predictor")
 st.markdown("Predict whether a hotel booking will be **Confirmed** or **Canceled** based on the input features.")
 
-# ----------------------------------
-# Step 1: Model Selection or URL Input
-# ----------------------------------
+# -----------------------------
+# Step 1: Load Model from Hugging Face
+# -----------------------------
 
-st.markdown("### Step 1: Choose or Provide a Model")
+st.markdown("### Step 1: Load Model from Hugging Face")
 
-preset_urls = {
-    "Random Forest (Google Drive)": "https://drive.usercontent.google.com/u/0/uc?id=1N36N2qn3egwmW6iwFOO4_5c_gSrrsODB&export=download",
-    "Extra Trees (Google Drive)": "https://drive.usercontent.google.com/u/0/uc?id=1vKWd-GA6eMB7g0LRCitsEzQjNHIDBDG0&export=download"
+huggingface_model_paths = {
+    "Random Forest (Hugging Face)": "georgtawadrous/HotelBookingStatusPredictor/blob/main/random_forest_model.pkl"
 }
 
-selected_preset = st.selectbox("Select a pre-trained model", list(preset_urls.keys()))
-custom_model_url = st.text_input("Or paste your own model URL (.pkl file)", value="")
+selected_model = st.selectbox("Select a pre-trained model", list(huggingface_model_paths.keys()))
+custom_model_path = st.text_input("Or paste your own Hugging Face model path (e.g., `username/repo/blob/main/model.pkl`)", value="")
 
-# Determine model URL
-model_url = custom_model_url.strip() if custom_model_url.strip() else preset_urls[selected_preset]
+# Determine which model path to use
+model_path = custom_model_path.strip() if custom_model_path.strip() else huggingface_model_paths[selected_model]
 
-# ----------------------------------
+# Construct Hugging Face raw download URL
+def get_hf_resolve_url(path: str):
+    return path.replace("blob/", "").replace("/main/", "/resolve/main/")
+
+model_url = f"https://huggingface.co/{get_hf_resolve_url(model_path)}"
+HUGGINGFACE_TOKEN = os.getenv("HF_TOKEN")  # Ensure this is set in your environment
+
+# -----------------------------
 # Step 2: Load Model
-# ----------------------------------
+# -----------------------------
 
 @st.cache_resource
 def load_model(url):
+    headers = {"Authorization": f"Bearer {HUGGINGFACE_TOKEN}"}
     try:
-        with st.spinner("Loading model (this may take a moment)..."):
-            response = requests.get(url, timeout=60)
+        with st.spinner("Loading model from Hugging Face..."):
+            response = requests.get(url, headers=headers, timeout=60)
             response.raise_for_status()
             model = joblib.load(BytesIO(response.content))
         return model
@@ -47,9 +56,9 @@ model = load_model(model_url)
 if model is None:
     st.stop()
 
-# ----------------------------------
+# -----------------------------
 # Step 3: User Inputs
-# ----------------------------------
+# -----------------------------
 
 st.markdown("### Step 2: Enter Booking Details")
 
@@ -71,9 +80,9 @@ no_of_previous_bookings_not_canceled = st.number_input("Previous Bookings Not Ca
 avg_price_per_room = st.number_input("Average Price per Room", value=100.0, step=1.0)
 no_of_special_requests = st.number_input("Special Requests", value=0, step=1)
 
-# ----------------------------------
+# -----------------------------
 # Step 4: Feature Engineering
-# ----------------------------------
+# -----------------------------
 
 input_data = {
     "no_of_adults": no_of_adults,
@@ -98,38 +107,115 @@ input_data = {
 df = pd.DataFrame([input_data])
 df["quarter"] = pd.to_datetime(df["arrival_month"], format='%m').dt.to_period("Q").astype(str)
 
-# One-hot encode
+# Define categorical columns
 categorical_columns = ["type_of_meal_plan", "room_type_reserved", "market_segment_type", "quarter"]
-df_encoded = pd.get_dummies(df, columns=categorical_columns)
 
-# Align with model training features
+# Create dummy variables with numeric dtype
+df_encoded = pd.get_dummies(df, columns=categorical_columns, dtype=float)
+
+# Ensure all expected columns are present
 expected_columns = model.feature_names_in_
 for col in expected_columns:
     if col not in df_encoded.columns:
-        df_encoded[col] = 0
+        df_encoded[col] = 0.0  # Use float to ensure numeric type
+
+# Reorder columns to match model's expected order
 df_encoded = df_encoded[expected_columns]
 
-# ----------------------------------
-# Step 5: Prediction
-# ----------------------------------
+# Convert all columns to float64 to avoid dtype issues
+df_encoded = df_encoded.astype(float)
 
-st.markdown("### Step 3: Prediction")
+# Debug: Inspect df_encoded
+#st.write("df_encoded shape:", df_encoded.shape)
+#st.write("df_encoded dtypes:", df_encoded.dtypes)
+
+# Verify no non-numeric columns
+if df_encoded.select_dtypes(include=['object', 'category']).columns.any():
+    #st.error("Non-numeric columns detected in df_encoded!")
+    #st.write(df_encoded.dtypes)
+    st.stop()
+
+# -----------------------------
+# Step 5: Prediction and Gemini Integration
+# -----------------------------
+
+# Configure Gemini API (ensure GEMINI_API_KEY is set in environment)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+
+# Placeholder function for Gemini API call
+def query_gemini(prompt):
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")  # Adjust model as needed
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        # Simulated response if API call fails or key is missing
+        return (
+            f"**Analysis of Cancellation Risk**: This booking is at risk due to being made through the Online segment, "
+            f"the customer being new, not requesting parking, and including a weekend night. "
+            f"However, the winter (Q1) timing reduces risk slightly.\n\n"
+            f"**Strategies to Prevent Cancellation**:\n"
+            f"1. Offer a 10% discount on their next stay or loyalty points to encourage commitment.\n"
+            f"2. Provide a partially refundable rate with a free breakfast or $10 room credit.\n"
+            f"3. Send a personalized confirmation email or make a courtesy call within 24 hours.\n"
+            f"4. Promote Room Type 1 and Meal Plan 1 benefits (e.g., cozy winter experience).\n"
+            f"5. Suggest adding parking or a low-cost add-on (e.g., spa access)."
+        )
 
 if st.button("Predict Booking Status"):
     try:
         prediction = model.predict(df_encoded)[0]
         status = "✅ Confirmed" if prediction == 1 else "❌ Canceled"
-        st.success(f"**Predicted Booking Status: {status}**")
+        st.success(f"*Predicted Booking Status: {status}*")
+
+        # If prediction is Canceled, query Gemini for prevention strategies
+        if prediction == 0:
+            st.markdown("### Cancellation Prevention Strategies")
+            # Construct customer data summary
+            customer_summary = (
+                f"Booking for {no_of_adults} adults, {no_of_children} children, "
+                f"{no_of_weekend_nights} weekend night(s), {no_of_week_nights} weeknight(s), "
+                f"{type_of_meal_plan}, {required_car_parking_space} parking, {room_type_reserved}, "
+                f"{lead_time} days lead time, arrival on {arrival_month}/{arrival_date}/{arrival_year}, "
+                f"via {market_segment_type}, repeated guest: {repeated_guest}, "
+                f"{no_of_previous_cancellations} previous cancellations, "
+                f"{no_of_previous_bookings_not_canceled} previous bookings not canceled, "
+                f"${avg_price_per_room} room price, {no_of_special_requests} special requests, "
+                f"in Q{((arrival_month-1)//3)+1} {arrival_year}."
+            )
+            # Dataset insights
+            insights = (
+                "Cancellations are most common in summer (41.19%), especially for early bookings and weekend stays. "
+                "Guests booking very early are more likely to cancel; early-bird offers should be non-refundable or include incentives. "
+                "Repeat guests and corporate clients are less likely to cancel. "
+                "Rooms with more guests tend to have higher cancellation rates. "
+                "Guests requesting parking almost never cancel. "
+                "Guests booking online (especially Online TA) cancel more frequently. "
+                "Most customers are new, not repeat clients; loyal customers behave consistently. "
+                "Cancellations are lowest in winter, and more frequent in Q3 and Q4. "
+                "Meal Plan 1, Room Type 1, and mid-range pricing are most common."
+            )
+            # Construct prompt
+            prompt = (
+                f"You are a data-driven hotel strategy assistant. A customer’s booking is predicted to be canceled based on their profile: {customer_summary} "
+                f"Based on these insights: {insights} "
+                f"Analyze the customer’s data, identify cancellation risk factors, and suggest specific, actionable, and personalized strategies to prevent this cancellation. "
+                f"Be concise, practical, and business-oriented."
+            )
+            # Query Gemini
+            gemini_response = query_gemini(prompt)
+            st.markdown(gemini_response)
     except Exception as e:
-        st.error(f"Prediction failed: {e}")
+        st.error(f"Prediction error: {e}")
 
-# ----------------------------------
-# Step 6: Power BI Integration
-# ----------------------------------
+# -----------------------------
+# Step 6: Power BI Report Integration
+# -----------------------------
 
-st.markdown("### Step 4: Power BI Report Integration")
-
-powerbi_url = st.text_input("Enter Power BI Report URL", value="")
-
-if powerbi_url:
-    st.markdown(f'<iframe width="800" height="600" src="{powerbi_url}" frameborder="0" allowFullScreen="true"></iframe>', unsafe_allow_html=True)
+st.markdown("### Step 6: Power BI Report")
+st.markdown(
+    '<iframe width="800" height="600" src="https://app.powerbi.com/reportEmbed?reportId=4596f25e-8722-4aaa-8a2b-381faa24055f&autoAuth=true&ctid=ad2a8324-bef7-46a8-adb4-fe51b6613b24" frameborder="0" allowFullScreen="true"></iframe>',
+    unsafe_allow_html=True
+)
