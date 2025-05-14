@@ -1,23 +1,25 @@
 
 # Hotel Booking Status Predictor
 
-This web application allows you to predict whether a hotel booking will be **Confirmed** or **Canceled** based on a set of input features. The app also integrates Power BI reports for visual analytics, providing a comprehensive solution for analyzing hotel booking data.
+This web application predicts whether a hotel booking will be **Confirmed** or **Canceled** based on user-provided input features. It integrates with Hugging Face for model loading, Gemini AI for cancellation prevention strategies, and Power BI for visual analytics, offering a robust solution for hotel booking analysis.
 
 ## Online URL: 
 [Hotel Booking Status Predictor](https://hotelbookingstatuspredictor.streamlit.app/)
 
 ## Features:
-- **Model Prediction**: Predicts booking status (Confirmed or Canceled) using pre-trained models (Random Forest, Extra Trees) or a custom model.
-- **User Input**: Users can input booking details such as the number of adults, children, lead time, meal plan, room type, and more.
-- **Power BI Integration**: Provides an option to embed a Power BI report via a URL input field, allowing users to visualize additional analytics.
+- **Model Prediction**: Predicts booking status (Confirmed or Canceled) using a pre-trained Random Forest model or a custom model from Hugging Face.
+- **User Input**: Allows users to input booking details, including number of adults, children, lead time, meal plan, room type, and more.
+- **Gemini AI Integration**: Provides actionable strategies to prevent cancellations when a booking is predicted to be canceled.
+- **Power BI Integration**: Embeds a Power BI report for visualizing booking data analytics.
 
 ## Technologies:
-- Streamlit: Framework for building the web app.
-- Scikit-learn: For machine learning models (Random Forest, Extra Trees).
-- Pandas: For handling data and preprocessing.
-- Joblib: For loading the pre-trained model.
-- Requests: For downloading the model from a URL.
-- Power BI: To embed external reports.
+- **Streamlit**: Framework for building the web application.
+- **Scikit-learn**: For the Random Forest machine learning model.
+- **Pandas**: For data handling and preprocessing.
+- **Joblib**: For loading pre-trained models.
+- **Requests**: For downloading models from Hugging Face.
+- **Google Generative AI**: For generating cancellation prevention strategies.
+- **Power BI**: For embedding interactive data visualizations.
 
 ## Installation
 
@@ -38,32 +40,42 @@ This web application allows you to predict whether a hotel booking will be **Con
     pip install -r requirements.txt
     ```
 
-4. **Run the application**:
+4. **Set environment variables**:
+    - Set `HF_TOKEN` for Hugging Face API access.
+    - Set `GEMINI_API_KEY` for Google Generative AI access.
+    ```bash
+    export HF_TOKEN='your-huggingface-token'
+    export GEMINI_API_KEY='your-gemini-api-key'
+    ```
+
+5. **Run the application**:
     ```bash
     streamlit run app.py
     ```
 
-5. Open your browser and go to `http://localhost:8501` to interact with the application.
+6. Open your browser and go to `http://localhost:8501` to interact with the application.
 
 ## How to Use:
 
-1. **Choose or provide a model**:
-    - You can either select one of the pre-trained models (Random Forest or Extra Trees) or upload your own `.pkl` model file via URL.
+1. **Select or provide a model**:
+   - Choose the pre-trained Random Forest model from Hugging Face or paste a custom Hugging Face model URL (e.g., `username/repo/blob/main/model.pkl`).
 
 2. **Enter booking details**:
-    - Fill out the form with booking details like number of adults, children, lead time, market segment, special requests, etc.
+   - Input details such as number of adults, children, lead time, meal plan, room type, market segment, and special requests.
 
 3. **Get the prediction**:
-    - After entering the details, click on the "Predict Booking Status" button to get the prediction. The result will display whether the booking is predicted to be **Confirmed** or **Canceled**.
+   - Click the "Predict Booking Status" button to see if the booking is predicted as **Confirmed** or **Canceled**.
+   - If canceled, Gemini AI provides personalized strategies to prevent cancellation.
 
-4. **Embed Power BI Report**:
-    - Paste the URL of a Power BI report to embed it in the app. The Power BI report will be shown directly below the prediction section.
+4. **View Power BI Report**:
+   - The embedded Power BI report displays visual analytics of booking data below the prediction section.
 
 ## Example Usage:
 
-- **Pre-trained model**: Select "Random Forest" or "Extra Trees" from the dropdown and input booking details.
-- **Custom model**: Upload your own `.pkl` model by pasting the URL in the text input field.
-- **Power BI**: Paste the URL of a Power BI report to view it in the app.
+- **Pre-trained model**: Select "Random Forest (Hugging Face)" and input booking details.
+- **Custom model**: Paste a Hugging Face model URL in the text input field.
+- **Gemini AI**: If a cancellation is predicted, view AI-generated strategies to reduce cancellation risk.
+- **Power BI**: Analyze booking trends via the embedded report.
 
 ## Requirements:
 - Python 3.6+
@@ -72,15 +84,16 @@ This web application allows you to predict whether a hotel booking will be **Con
 - Pandas
 - Joblib
 - Requests
+- Google Generative AI
 
 To install these requirements, run:
 ```bash
-pip install streamlit scikit-learn pandas joblib requests
-````
+pip install streamlit scikit-learn pandas joblib requests google-generativeai
+```
 
 ## Contributing:
 
-Feel free to fork the repository, create a branch, and submit pull requests for any improvements or bug fixes.
+Feel free to fork the repository, create a branch, and submit pull requests for improvements or bug fixes.
 
 ## License:
 
